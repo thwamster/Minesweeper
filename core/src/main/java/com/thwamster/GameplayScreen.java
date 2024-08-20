@@ -4,13 +4,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-
-import java.util.ArrayList;
-import java.util.Random;
 
 public class GameplayScreen implements Screen {
 
@@ -23,6 +21,7 @@ public class GameplayScreen implements Screen {
     private ShapeRenderer shapeRenderer; // object that allows us to draw shapes
     private Camera camera; // camera to view our virtual world
     private Viewport viewport; // control how the camera views the world, zooms and scales.
+    private BitmapFont defaultFont; // default libgdx font
 
     /* Game Mechanics */
     private GameBoard board;
@@ -44,12 +43,7 @@ public class GameplayScreen implements Screen {
 
         // game mechanics
         this.board = new GameBoard(this);
-    }
-
-    public void clearScreen() {
-        // screen --> white
-        Gdx.gl.glClearColor(1,1,1,1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        this.defaultFont = new BitmapFont();
     }
 
     /*
@@ -62,42 +56,94 @@ public class GameplayScreen implements Screen {
     public void render(float delta) {
         clearScreen();
 
-        // all drawing of shapes between this
-        this.shapeRenderer.begin();
+        int gameStatus = this.board.getGameStatus();
+        if (gameStatus == 0 || gameStatus == 1) {
+            checkMouseInput();
+        }
+        else {
+            checkKeyboardInput();
+        }
+        draw(gameStatus);
+    }
+
+    public void draw(int gameStatus) {
+        float margin = 80;
+        float gameWidth = GameplayScreen.getWorldWidth() - 2 * margin;
+        float gameHeight = GameplayScreen.getWorldHeight() - 2 * margin;
+
+        float scale = Math.min(gameWidth / this.board.getNumCols(), gameHeight / this.board.getNumRows());
+        float xIndent = (gameWidth - (scale * this.board.getNumCols())) / 2;
+        float yIndent = (gameHeight - (scale * this.board.getNumRows())) / 2;
+
+        this.shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        this.shapeRenderer.setColor(0.5F, 0.5F, 0.5F, 0);
+        this.shapeRenderer.rect(xIndent, yIndent, GameplayScreen.reverse2xWidth(xIndent), GameplayScreen.reverse2xHeight(yIndent));
         this.shapeRenderer.end();
 
-        // all drawing of graphics between this
         this.spriteBatch.begin();
-        board.draw(this.spriteBatch);
+        for (int r = 0; r < this.board.getNumRows(); r++) {
+            for (int c = 0; c < this.board.getNumCols(); c++) {
+                this.spriteBatch.draw(this.board.drawTile(this.board.getBoard()[r][c]), c * scale + xIndent + margin, r * scale + yIndent + margin, scale, scale);
+            }
+        }
+        this.defaultFont.draw(this.spriteBatch, "Flags Remaining: " + (this.board.getNumBombs() - this.board.getNumFlags()), xIndent + 80, reverseHeight(40));
+        this.defaultFont.draw(this.spriteBatch, "Time Elapsed:  " + (this.board.getTime()), reverseWidth(xIndent + 210), reverseHeight(40));
+
+        if (gameStatus == -1) {
+            this.defaultFont.draw(this.spriteBatch, "Game over. Loss.", xIndent + 80, 40);
+            this.defaultFont.draw(this.spriteBatch, "R to restart.", reverseWidth(xIndent + 155), 40);
+        }
+        else if (gameStatus == 0) {
+            this.defaultFont.draw(this.spriteBatch, "Left mouse to start.", reverseWidth(xIndent + 205), 40);
+        }
+        else if (gameStatus == 2) {
+            this.defaultFont.draw(this.spriteBatch, "Game over. Victory.", xIndent + 80, 40);
+            this.defaultFont.draw(this.spriteBatch, "R to restart.", reverseWidth(xIndent + 155), 40);
+        }
+
         this.spriteBatch.end();
     }
-    @Override
-    public void resize(int width, int height) { viewport.update(width,height); }
 
-    @Override
-    public void pause() {
-
+    public void clearScreen() {
+        Gdx.gl.glClearColor(0, 0, 0, 0);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
     }
 
-    @Override
-    public void resume() {
-
+    private void checkMouseInput() {
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            this.board.leftMouse(Gdx.input.getX(), Gdx.input.getY());
+        }
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
+            this.board.rightMouse(Gdx.input.getX(), Gdx.input.getY());
+        }
     }
 
-    @Override
-    public void hide() {
-
+    private void checkKeyboardInput() {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
+            this.board.reset();
+        }
     }
 
+    /* Camera Methods */
+    @Override
+    public void resize(int width, int height) { this.viewport.update(width,height); }
+    @Override
+    public void pause() { }
+    @Override
+    public void resume() { }
+    @Override
+    public void hide() { }
     @Override
     public void dispose() {
         this.spriteBatch.dispose();
         this.shapeRenderer.dispose();
     }
 
-    /* Get Methods */
-    public static float reverseWidth(int x) { return worldWidth - x; }
-    public static float reverseHeight(int y) { return worldHeight - y; }
+    /* Helper Methods */
+    public static float reverseWidth(float x) { return worldWidth - x; }
+    public static float reverseHeight(float y) { return worldHeight - y; }
+    public static float reverse2xWidth(float x) { return worldWidth - x * 2; }
+    public static float reverse2xHeight(float y) { return worldHeight - y * 2; }
     public static float getWorldWidth() { return worldWidth; }
     public static float getWorldHeight() { return worldHeight; }
 }
