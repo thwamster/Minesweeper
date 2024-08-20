@@ -16,7 +16,7 @@ public class GameBoard {
     private int gameStatus; // status of game ending
     private long startTime; // beginning timer
     private long finishTime; // end timer
-    private GameplayScreen gameScreen; // access to the GameplayScreen
+    private ArrayList<Long> scoreBoard;
 
     // Textures
     private Texture emptyTile;
@@ -33,17 +33,10 @@ public class GameBoard {
     private Texture flagTile;
 
     /* Constructors */
-    public GameBoard(GameplayScreen gameScreen) {
-        this(gameScreen, 10, 10, 2);
-    }
-
-    public GameBoard(GameplayScreen gameScreen, int newNumRows, int newNumCols, int newNumBombs) {
-        this.gameScreen = gameScreen;
-        this.board = new int[newNumRows][newNumCols];
-        this.numBombs = newNumBombs;
-        this.reset();
-
-        this.loadGraphics();
+    public GameBoard() {
+        this.initialize(8, 8, 1);
+        this.scoreBoard = new ArrayList<Long>();
+        // this.setDifficulty(0);
     }
 
     /* Helper Methods */
@@ -53,21 +46,23 @@ public class GameBoard {
     public int getNumRows() { return this.board.length; }
     public int getNumBombs() { return this.numBombs; }
     public int getNumFlags() { return this.numFlags; }
+    public ArrayList<Long> getScoreBoard() { return this.scoreBoard; }
 
     public String getTime() {
         long time;
-        if (this.gameStatus == -1) {
+        if (this.gameStatus == -1 || this.gameStatus == 2) {
             time = this.finishTime;
         }
         else if (this.gameStatus == 1) {
             time = System.currentTimeMillis() - this.startTime;
         }
-        else if (this.gameStatus == 2) {
-            time = this.finishTime;
-        }
         else {
             time = 0;
         }
+        return this.formatTime(time);
+    }
+
+    public String formatTime(Long time) {
         int minutes = (int) (time / (60 * 1000));
         int seconds = (int) ((time / 1000) % 60);
         return String.format("%d:%02d", minutes, seconds);
@@ -95,8 +90,7 @@ public class GameBoard {
                 }
             }
             if (finish) {
-                this.gameStatus = 2;
-                finish();
+                this.finish(2);
             }
         }
         return this.gameStatus;
@@ -122,6 +116,27 @@ public class GameBoard {
     }
 
     /* Initialization Methods */
+    public void initialize(int newNumRows, int newNumCols, int newNumBombs) {
+        this.board = new int[newNumRows][newNumCols];
+        this.numBombs = newNumBombs;
+        this.reset();
+        this.loadGraphics();
+    }
+
+    public void setDifficulty(int difficulty) {
+        switch (difficulty) {
+            case 1:
+                this.initialize(8, 8, 10);
+                break;
+            case 3:
+                this.initialize(16, 30, 99);
+                break;
+            default:
+                this.initialize(16, 16, 40);
+                break;
+        }
+    }
+
     public void start(Location startLocation) {
         this.gameStatus = 1;
         this.startTime = System.currentTimeMillis();
@@ -130,8 +145,12 @@ public class GameBoard {
         this.numberBoard();
     }
 
-    public void finish() {
+    public void finish(int finishStatus) {
         this.finishTime = System.currentTimeMillis() - this.startTime;
+        if (gameStatus == 1 && finishStatus == 2) {
+            this.scoreBoard.add(this.finishTime);
+        }
+        this.gameStatus = finishStatus;
     }
 
     public void reset() {
@@ -255,9 +274,8 @@ public class GameBoard {
                 this.uncoverLocation(location);
             }
             else if (value == -1) {
-                this.gameStatus = -1;
+                this.finish(-1);
                 this.uncoverAllLocations();
-                this.finish();
             }
             else if (value >= -1 && value <= 8) {
                 this.board[location.getRow()][location.getCol()] += 10;
@@ -290,8 +308,7 @@ public class GameBoard {
             this.board[location.getRow()][location.getCol()] += 10;
         }
 
-        for (int i = 0; i < allNeighbors.size(); i++) {
-            Location neighbor = allNeighbors.get(i);
+        for (Location neighbor : allNeighbors) {
             value = this.board[neighbor.getRow()][neighbor.getCol()];
             if (this.board[neighbor.getRow()][neighbor.getCol()] == 0) {
                 this.uncoverLocation(neighbor);

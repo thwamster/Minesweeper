@@ -7,8 +7,12 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class GameplayScreen implements Screen {
 
@@ -42,7 +46,7 @@ public class GameplayScreen implements Screen {
         this.shapeRenderer.setAutoShapeType(true); // solution to an annoying problem
 
         // game mechanics
-        this.board = new GameBoard(this);
+        this.board = new GameBoard();
         this.defaultFont = new BitmapFont();
     }
 
@@ -89,8 +93,18 @@ public class GameplayScreen implements Screen {
         this.defaultFont.draw(this.spriteBatch, "Flags Remaining: " + (this.board.getNumBombs() - this.board.getNumFlags()), xIndent + 80, reverseHeight(40));
         this.defaultFont.draw(this.spriteBatch, "Time Elapsed:  " + (this.board.getTime()), reverseWidth(xIndent + 210), reverseHeight(40));
 
+        ArrayList<Long> scoreboard = this.board.getScoreBoard();
+        if (!scoreboard.isEmpty()) {
+            Collections.sort(scoreboard);
+
+            this.defaultFont.draw(this.spriteBatch, "Scores: ", xIndent + 10, reverseHeight(110));
+            for (int i = 0; i < scoreboard.size() && i < 10; i++) {
+                this.defaultFont.draw(this.spriteBatch, (i + 1) + ". " + this.board.formatTime(scoreboard.get(i)), xIndent + 10, reverseHeight(110 + (i + 1) * 20));
+            }
+        }
+
         if (gameStatus == -1) {
-            this.defaultFont.draw(this.spriteBatch, "Game over. Loss.", xIndent + 80, 40);
+            this.defaultFont.draw(this.spriteBatch, "Game ove   r. Loss.", xIndent + 80, 40);
             this.defaultFont.draw(this.spriteBatch, "R to restart.", reverseWidth(xIndent + 155), 40);
         }
         else if (gameStatus == 0) {
