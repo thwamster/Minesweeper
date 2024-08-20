@@ -3,6 +3,9 @@ package com.thwamster;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
+import java.util.ArrayList;
+import java.util.Collections;
+
 public class GameBoard {
     public static final int bomb = -1; // helps with readability
 
@@ -42,6 +45,13 @@ public class GameBoard {
         loadGraphics();
     }
 
+    public int getNumCols() {
+        return this.board[0].length;
+    }
+    public int getNumRows() {
+        return this.board.length;
+    }
+
     private void loadGraphics() {
         emptyTile = new Texture("emptyTile.jpg");
         emptyFloorTile= new Texture("empty floor.jpg");
@@ -63,26 +73,19 @@ public class GameBoard {
     }
 
     private Texture drawTile(int value) {
-        switch (value) {
-            case 11:
-                return oneTile;
-            case 12:
-                return twoTile;
-            case 13:
-                return threeTile;
-            case 14:
-                return fourTile;
-            case 15:
-                return fiveTile;
-            case 16:
-                return sixTile;
-            case 17:
-                return sevenTile;
-            case 18:
-                return eightTile;
-            default:
-                return emptyTile;
-        }
+        if (value < 9) { return emptyTile; }
+        else if (value == 9) { return bombTile; }
+        else if (value == 10) { return emptyFloorTile; }
+        else if (value == 11) { return oneTile; }
+        else if (value == 12) { return twoTile; }
+        else if (value == 13) { return threeTile; }
+        else if (value == 14) { return fourTile; }
+        else if (value == 15) { return fiveTile; }
+        else if (value == 16) { return sixTile; }
+        else if (value == 17) { return sevenTile; }
+        else if (value == 18) { return eightTile; }
+        else if (value <= 28) { return flagTile; }
+        else { return emptyTile; }
     }
 
     private void placeBombs() {
@@ -98,5 +101,22 @@ public class GameBoard {
         board[0][8] = 9;
         board[0][9] = 10;
         board[0][10] = 19;
+    }
+
+    public Location getEmptyLocation() {
+        ArrayList<Location> allEmpty = new ArrayList<Location>();
+
+        for (int r = 0; r < getNumRows(); r++) {
+            for (int c = 0; c < getNumCols(); c++) {
+                if (this.board[r][c] == 0) {
+                    allEmpty.add(new Location(r, c));
+                }
+            }
+        }
+
+        Collections.shuffle(allEmpty);
+
+        if (!allEmpty.isEmpty()) { return allEmpty.get(0); }
+        else { return new Location(-1, -1); }
     }
 }

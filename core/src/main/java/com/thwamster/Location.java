@@ -3,8 +3,10 @@ package com.thwamster;
 public class Location {
     private int row;
     private int col;
-    public Location (int newRow, int newCol) {
 
+    public Location (int newRow, int newCol) {
+        this.row = newRow;
+        this.col = newCol;
     }
 
     public int getRow() { return this.row; }
