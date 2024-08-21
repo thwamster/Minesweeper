@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class GameplayScreen implements Screen {
-
     /* Display Characteristics */
     private static final float worldWidth = 1280;
     private static final float worldHeight = 728;
@@ -47,11 +46,8 @@ public class GameplayScreen implements Screen {
         this.shapeRenderer.setAutoShapeType(true); // solution to an annoying problem
 
         // game mechanics
-<<<<<<< Updated upstream
         this.board = new GameBoard();
-        this.defaultFont = new BitmapFont();
-=======
-        this.board = new GameBoard(this);
+        this.board = new GameBoard();
 
         // fonts
         FreeTypeFontGenerator importFont = new FreeTypeFontGenerator(Gdx.files.internal("mine-sweeper.ttf"));
@@ -59,7 +55,6 @@ public class GameplayScreen implements Screen {
         parameter.size = 10;
 
         this.font = importFont.generateFont(parameter);
->>>>>>> Stashed changes
     }
 
     /*
@@ -106,23 +101,18 @@ public class GameplayScreen implements Screen {
         this.font.draw(this.spriteBatch, "Time Elapsed:  " + (this.board.getTime()), reverseWidth(xIndent + 250), reverseHeight(yIndent + 40));
 
         ArrayList<Long> scoreboard = this.board.getScoreBoard();
-        if (!scoreboard.isEmpty()) {
+        if (scoreboard != null && !scoreboard.isEmpty()) {
             Collections.sort(scoreboard);
 
-            this.defaultFont.draw(this.spriteBatch, "Scores: ", xIndent + 10, reverseHeight(110));
-            for (int i = 0; i < scoreboard.size() && i < 10; i++) {
-                this.defaultFont.draw(this.spriteBatch, (i + 1) + ". " + this.board.formatTime(scoreboard.get(i)), xIndent + 10, reverseHeight(110 + (i + 1) * 20));
+            this.font.draw(this.spriteBatch, "Scores: ", xIndent + 7, reverseHeight(110));
+            for (int i = 0; i < scoreboard.size() && i < 24; i++) {
+                this.font.draw(this.spriteBatch, (i + 1) + ". " + this.board.formatTime(scoreboard.get(i)), xIndent + 7, reverseHeight(110 + (i + 1) * 20));
             }
         }
 
         if (gameStatus == -1) {
-<<<<<<< Updated upstream
-            this.defaultFont.draw(this.spriteBatch, "Game ove   r. Loss.", xIndent + 80, 40);
-            this.defaultFont.draw(this.spriteBatch, "R to restart.", reverseWidth(xIndent + 155), 40);
-=======
             this.font.draw(this.spriteBatch, "Game over. Loss.", xIndent + 80, yIndent + 40);
             this.font.draw(this.spriteBatch, "R to restart.", reverseWidth(xIndent + 195), yIndent + 40);
->>>>>>> Stashed changes
         }
         else if (gameStatus == 0) {
             this.font.draw(this.spriteBatch, "Left mouse to start.", reverseWidth(xIndent + 265), yIndent + 40);
@@ -140,6 +130,7 @@ public class GameplayScreen implements Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
     }
 
+    // Inputs
     private void checkMouseInput() {
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
             this.board.leftMouse(Gdx.input.getX(), Gdx.input.getY());

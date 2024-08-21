@@ -1,6 +1,12 @@
 package com.thwamster;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonWriter;
 
 
 import java.util.ArrayList;
@@ -16,7 +22,6 @@ public class GameBoard {
     private int gameStatus; // status of game ending
     private long startTime; // beginning timer
     private long finishTime; // end timer
-    private ArrayList<Long> scoreBoard;
 
     // Textures
     private Texture emptyTile;
@@ -33,24 +38,12 @@ public class GameBoard {
     private Texture flagTile;
 
     /* Constructors */
-<<<<<<< Updated upstream
     public GameBoard() {
-        this.initialize(8, 8, 1);
-        this.scoreBoard = new ArrayList<Long>();
-        // this.setDifficulty(0);
-=======
-    public GameBoard(GameplayScreen gameScreen) {
-        this(gameScreen, 30, 50, 50);
+        this(1, 2, 1);
     }
 
-    public GameBoard(GameplayScreen gameScreen, int newNumRows, int newNumCols, int newNumBombs) {
-        this.gameScreen = gameScreen;
-        this.board = new int[newNumRows][newNumCols];
-        this.numBombs = newNumBombs;
-        this.reset();
-
-        this.loadGraphics();
->>>>>>> Stashed changes
+    public GameBoard(int newNumRows, int newNumCols, int newNumBombs) {
+        initialize(newNumRows, newNumCols, newNumBombs);
     }
 
     /* Helper Methods */
@@ -60,7 +53,6 @@ public class GameBoard {
     public int getNumRows() { return this.board.length; }
     public int getNumBombs() { return this.numBombs; }
     public int getNumFlags() { return this.numFlags; }
-    public ArrayList<Long> getScoreBoard() { return this.scoreBoard; }
 
     public String getTime() {
         long time;
@@ -74,12 +66,6 @@ public class GameBoard {
             time = 0;
         }
         return this.formatTime(time);
-    }
-
-    public String formatTime(Long time) {
-        int minutes = (int) (time / (60 * 1000));
-        int seconds = (int) ((time / 1000) % 60);
-        return String.format("%d:%02d", minutes, seconds);
     }
 
     public int getGameStatus() {
@@ -110,7 +96,31 @@ public class GameBoard {
         return this.gameStatus;
     }
 
-    // Other Methods
+    public ArrayList<Long> getScoreBoard() {
+        String fileName = "scores-" + this.getNumRows() + "x" + this.getNumCols() + "-" + this.getNumBombs();
+        ArrayList<Long> scoreBoard;
+
+        if (Gdx.files.local(fileName).exists()) {
+            FileHandle file = Gdx.files.local(fileName);
+            String scoreString = file.readString();
+            String[] scoreArray = scoreString.split(", ");
+
+            scoreBoard = new ArrayList<Long>();
+            for (String score : scoreArray) {
+                try {
+                    scoreBoard.add(Long.parseLong(score));
+                }
+                catch (NumberFormatException ignored) { }
+            }
+        }
+        else {
+            scoreBoard = null;
+        }
+
+        return scoreBoard;
+    }
+
+    // Location
     public Location positionToLocation(float x, float y) {
         float margin = 80;
         float gameWidth = GameplayScreen.getWorldWidth() - 2 * margin;
@@ -129,6 +139,13 @@ public class GameBoard {
                 location.getCol() >= 0 && location.getCol() < this.getNumCols();
     }
 
+    // Time
+    public String formatTime(Long time) {
+        int minutes = (int) (time / (60 * 1000));
+        int seconds = (int) ((time / 1000) % 60);
+        return String.format("%d:%02d", minutes, seconds);
+    }
+
     /* Initialization Methods */
     public void initialize(int newNumRows, int newNumCols, int newNumBombs) {
         this.board = new int[newNumRows][newNumCols];
@@ -137,6 +154,30 @@ public class GameBoard {
         this.loadGraphics();
     }
 
+    public void start(Location startLocation) {
+        this.gameStatus = 1;
+        this.startTime = System.currentTimeMillis();
+
+        this.placeBombs(startLocation);
+        this.numberBoard();
+    }
+
+    public void finish(int finishStatus) {
+        this.finishTime = System.currentTimeMillis() - this.startTime;
+        if (gameStatus == 1 && finishStatus == 2) {
+            saveScore();
+        }
+        this.gameStatus = finishStatus;
+    }
+
+    public void reset() {
+        for (int[] values : this.board) {
+            Arrays.fill(values, 0);
+        }
+        this.numFlags = 0;
+        this.gameStatus = 0;
+    }
+    // Difficulty
     public void setDifficulty(int difficulty) {
         switch (difficulty) {
             case 1:
@@ -151,28 +192,12 @@ public class GameBoard {
         }
     }
 
-    public void start(Location startLocation) {
-        this.gameStatus = 1;
-        this.startTime = System.currentTimeMillis();
+    // Score
+    public void saveScore() {
+        String fileName = "scores-" + this.getNumRows() + "x" + this.getNumCols() + "-" + this.getNumBombs();
 
-        this.placeBombs(startLocation);
-        this.numberBoard();
-    }
-
-    public void finish(int finishStatus) {
-        this.finishTime = System.currentTimeMillis() - this.startTime;
-        if (gameStatus == 1 && finishStatus == 2) {
-            this.scoreBoard.add(this.finishTime);
-        }
-        this.gameStatus = finishStatus;
-    }
-
-    public void reset() {
-        for (int[] values : this.board) {
-            Arrays.fill(values, 0);
-        }
-        this.numFlags = 0;
-        this.gameStatus = 0;
+        FileHandle file = Gdx.files.local(fileName);
+        file.writeString(this.finishTime + ", ", true);
     }
 
     // Textures
@@ -315,6 +340,7 @@ public class GameBoard {
         }
     }
 
+    // Uncovering
     private void uncoverLocation(Location location) {
         ArrayList<Location> allNeighbors = this.getNeighbors(location);
         int value = this.board[location.getRow()][location.getCol()];
