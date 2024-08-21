@@ -33,10 +33,24 @@ public class GameBoard {
     private Texture flagTile;
 
     /* Constructors */
+<<<<<<< Updated upstream
     public GameBoard() {
         this.initialize(8, 8, 1);
         this.scoreBoard = new ArrayList<Long>();
         // this.setDifficulty(0);
+=======
+    public GameBoard(GameplayScreen gameScreen) {
+        this(gameScreen, 30, 50, 50);
+    }
+
+    public GameBoard(GameplayScreen gameScreen, int newNumRows, int newNumCols, int newNumBombs) {
+        this.gameScreen = gameScreen;
+        this.board = new int[newNumRows][newNumCols];
+        this.numBombs = newNumBombs;
+        this.reset();
+
+        this.loadGraphics();
+>>>>>>> Stashed changes
     }
 
     /* Helper Methods */

@@ -6,6 +6,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -25,7 +26,7 @@ public class GameplayScreen implements Screen {
     private ShapeRenderer shapeRenderer; // object that allows us to draw shapes
     private Camera camera; // camera to view our virtual world
     private Viewport viewport; // control how the camera views the world, zooms and scales.
-    private BitmapFont defaultFont; // default libgdx font
+    private BitmapFont font; // custom font
 
     /* Game Mechanics */
     private GameBoard board;
@@ -46,8 +47,19 @@ public class GameplayScreen implements Screen {
         this.shapeRenderer.setAutoShapeType(true); // solution to an annoying problem
 
         // game mechanics
+<<<<<<< Updated upstream
         this.board = new GameBoard();
         this.defaultFont = new BitmapFont();
+=======
+        this.board = new GameBoard(this);
+
+        // fonts
+        FreeTypeFontGenerator importFont = new FreeTypeFontGenerator(Gdx.files.internal("mine-sweeper.ttf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameter.size = 10;
+
+        this.font = importFont.generateFont(parameter);
+>>>>>>> Stashed changes
     }
 
     /*
@@ -90,8 +102,8 @@ public class GameplayScreen implements Screen {
                 this.spriteBatch.draw(this.board.drawTile(this.board.getBoard()[r][c]), c * scale + xIndent + margin, r * scale + yIndent + margin, scale, scale);
             }
         }
-        this.defaultFont.draw(this.spriteBatch, "Flags Remaining: " + (this.board.getNumBombs() - this.board.getNumFlags()), xIndent + 80, reverseHeight(40));
-        this.defaultFont.draw(this.spriteBatch, "Time Elapsed:  " + (this.board.getTime()), reverseWidth(xIndent + 210), reverseHeight(40));
+        this.font.draw(this.spriteBatch, "Flags Remaining: " + (this.board.getNumBombs() - this.board.getNumFlags()), xIndent + 80, reverseHeight(yIndent + 40));
+        this.font.draw(this.spriteBatch, "Time Elapsed:  " + (this.board.getTime()), reverseWidth(xIndent + 250), reverseHeight(yIndent + 40));
 
         ArrayList<Long> scoreboard = this.board.getScoreBoard();
         if (!scoreboard.isEmpty()) {
@@ -104,15 +116,20 @@ public class GameplayScreen implements Screen {
         }
 
         if (gameStatus == -1) {
+<<<<<<< Updated upstream
             this.defaultFont.draw(this.spriteBatch, "Game ove   r. Loss.", xIndent + 80, 40);
             this.defaultFont.draw(this.spriteBatch, "R to restart.", reverseWidth(xIndent + 155), 40);
+=======
+            this.font.draw(this.spriteBatch, "Game over. Loss.", xIndent + 80, yIndent + 40);
+            this.font.draw(this.spriteBatch, "R to restart.", reverseWidth(xIndent + 195), yIndent + 40);
+>>>>>>> Stashed changes
         }
         else if (gameStatus == 0) {
-            this.defaultFont.draw(this.spriteBatch, "Left mouse to start.", reverseWidth(xIndent + 205), 40);
+            this.font.draw(this.spriteBatch, "Left mouse to start.", reverseWidth(xIndent + 265), yIndent + 40);
         }
         else if (gameStatus == 2) {
-            this.defaultFont.draw(this.spriteBatch, "Game over. Victory.", xIndent + 80, 40);
-            this.defaultFont.draw(this.spriteBatch, "R to restart.", reverseWidth(xIndent + 155), 40);
+            this.font.draw(this.spriteBatch, "Game over. Victory.", xIndent + 80, yIndent + 40);
+            this.font.draw(this.spriteBatch, "R to restart.", reverseWidth(xIndent + 195), yIndent + 40);
         }
 
         this.spriteBatch.end();
@@ -151,6 +168,7 @@ public class GameplayScreen implements Screen {
     public void dispose() {
         this.spriteBatch.dispose();
         this.shapeRenderer.dispose();
+        this.font.dispose();
     }
 
     /* Helper Methods */
